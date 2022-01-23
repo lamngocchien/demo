@@ -1,0 +1,198 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+void wait(){
+	cout <<"Waiting ..."<<endl;
+	while (true)
+	{
+
+	}
+}
+
+#define MAX 200
+#define AZSIZE 26
+int node_cnt = 0;
+struct TrieNode{
+	int isEndifWord;
+	int cnt;
+	int layer;
+	TrieNode * children[AZSIZE];
+};
+
+TrieNode * getNode (int layer=0){
+	node_cnt++;
+	cout <<"NodeCount +"<<node_cnt<<endl;
+	TrieNode * pNode =  new TrieNode;
+	pNode->isEndifWord = false;
+	pNode->cnt = 0;
+	pNode->layer = layer;
+	for(int i = 0; i<AZSIZE; i++){
+		pNode->children[i] = NULL;
+	}
+	return pNode;
+}
+
+int insert(TrieNode * root, char str[]){
+	
+	cout <<"insert text = "<<str<<endl;
+
+	TrieNode * p = root;
+	int layer = 0;
+	for(int i = 0 ; i < 30; i++ ){
+		if (str[i] != '\0'){
+			layer++;
+			int index = str[i] - 'a';
+			cout <<"str[i] = "<<str[i]<<" index = "<<index<<endl;
+			if(!p->children[index]){
+				p->children[index] = getNode(layer);
+			}
+			p = p->children[index];
+		} else {
+		
+			p->isEndifWord = true;
+			p->cnt++;
+			cout <<"END"<<endl;
+			break;
+		}
+	}
+
+	return p->cnt;
+	//return 0;
+}
+
+
+int search(TrieNode * root, char str[]){
+	cout <<"search text = "<<str<<endl;
+	if (root == NULL)
+		return 0;
+	
+	TrieNode * p = root;
+
+	
+	for(int i = 0 ; i < 30; i++ ){
+		if (str[i] != '\0'){
+			int index = str[i] - 'a';
+			//cout <<"str[i] = "<<str[i]<<" index = "<<index<<endl;
+			if (p == NULL)
+				return 0;
+
+			if(!p->children[index]){
+				return 0;
+			}
+			p = p->children[index];
+		} else {
+			break;
+		}
+	}
+
+	return p->cnt;
+}
+
+bool isEmpty(TrieNode * root){
+	for(int i = 0; i< AZSIZE; i++){
+		if (root->children[i])
+			return false;
+	}
+	return true;
+}
+
+
+TrieNode * remove(TrieNode * root, char str[], int depth = 0){
+
+
+	// is empty
+	if(root == NULL)
+		return NULL;
+
+	// last char
+	if (str[depth] == '\0'){
+		cout <<"Found last for "<<str[depth]<<" at "<<depth<<endl;
+		cout <<"root = "<<root<<endl;
+		cout <<"root->isEndifWord = "<<root->isEndifWord<<endl;
+		if(root->isEndifWord){
+			cout <<"Change isEndifWord"<<endl;
+			root->isEndifWord = false;
+			/*if (root->cnt>1){
+				root->cnt--;
+			} else {
+				root->cnt=0;
+				root->isEndifWord = false;
+			}*/
+		}
+
+		if (isEmpty(root)){
+			cout <<"remove root at layer "<<depth<<endl;
+			free(root);
+			root = NULL;
+		}
+
+		return root;
+	}
+
+	// not last char
+	int index = str[depth] - 'a';
+	cout <<"remove "<<str[depth]<<" index = "<<index<<endl;
+	root->children[index] = remove(root->children[index], str, depth+1);
+
+	if (isEmpty(root) && root->isEndifWord == false){
+		free(root);
+		root = NULL;
+	}
+
+	return root;
+
+}
+
+TrieNode * root;
+
+void init(){
+	//reset trie
+	root = getNode();
+}
+
+int main(){
+	//string stext = "abc_abcd_mot_hai_ba_bon_nam_sau_bay_tam_chin_muoi_muoimot";
+	string stext = "abcd_a_abcd_abcd_abc_abcd_mot_hai_ba_bon_nam_sau_bay_tam_chin_muoi_muoimot";
+	init();
+	char text[10];
+	int len_text = 0;
+	int final = 0;
+	int idx = 0;
+	//TrieNode * root = getNode();
+	while (true)
+	{
+		if (stext[idx] == '\0')
+			final = 1;
+
+		if (final || stext[idx] == '_'){
+			cout <<"=============================================================="<<endl;
+			text[len_text] = '\0';
+			cout <<"SearchB "<<text<<" = "<<search(root, text)<<endl;
+			int ret = insert(root, text);
+			cout <<"Count for "<<text<<" is "<<ret<<endl;
+
+			cout <<"SearchA "<<text<<" = "<<search(root, text)<<endl;
+			
+			cout <<" ============ REMOVE ==================="<<endl;
+			remove(root, text);
+			//wait();
+			cout <<" ============ ENDREMOVE ==================="<<endl;
+			cout <<"SearchX "<<text<<" = "<<search(root, text)<<endl;
+			//wait();
+			len_text = 0;
+		} else {
+			text[len_text] = stext[idx];
+			len_text++;
+		}
+
+
+		if (final)
+			break;
+			
+		idx++;
+	}
+
+	wait();
+	return 0;
+}
